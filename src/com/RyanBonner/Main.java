@@ -12,53 +12,85 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
-        String userName = scanner.nextLine();
+        String humanName = scanner.nextLine();
 
-        System.out.println("Hi " + userName + ", would you like to see how strong you are?");
-        Random rand = new Random();
-        int health = rand.nextInt(1000) + 100;
-        int attack = rand.nextInt(100) + 10;
-        int attackSpeed = rand.nextInt(7) + 1;
-        System.out.println("Your Health is: " + health);
-        System.out.println("Your Attack Damage is: " + attack);
-        System.out.println("Your Attack Speed is: " + attackSpeed);
-        int compHealth = rand.nextInt(1000) + 250;
-        int compAttack = rand.nextInt(125) + 25;
-        int compAttackSpeed = rand.nextInt(5) + 1;
-        System.out.println("..................................");
-        System.out.println("Computer's Health is: " + compHealth);
-        System.out.println("Computer's Attack Damage is : " + compAttack);
-        System.out.println("Computer's Attack Speed is : " + compAttackSpeed);
-        //dice roll 1-20
-        Random roll = new Random();
-        int player1 = roll.nextInt(19) + 1;
-        int computer1 = roll.nextInt(19) + 1;
+        System.out.println("Hi " + humanName + ", would you like to see how strong you are?");
 
+        Player human = new Player(humanName);
+        human.setHealth(Player.generateStat(100, 1000));
+        human.setAttackDamage(Player.generateStat(10, 100));
+        human.setAttackSpeed(Player.generateStat(1, 7));
+        System.out.print(human.toString());
 
-        while (health > 0 && compHealth > 0) {
+        int computerOPWeight = 2;
+        Player computer = new Player("KappaDelta");
+        computer.setHealth(Player.generateStat(100, 1000, computerOPWeight));
+        computer.setAttackDamage(Player.generateStat(10, 100, computerOPWeight));
+        computer.setAttackSpeed(Player.generateStat(1, 7, computerOPWeight));
+        System.out.print(computer.toString());
 
-            if (player1 >= computer1) {
-                //player1 attacks 1st
-                compHealth = compHealth - attack;
-                //computer attacks if not dead
-                if (compHealth > 0) {
-                    health = health - compAttack;
-                }
-            } else if (computer1 > player1) {
-                health = health - compAttack;
+        int humanRoll = Player.generateStat(1, 20);
+        int computerRoll = Player.generateStat(1, 20);
 
-                if (health > 0) {
-                    compHealth = compHealth - attack;
-                }
+        Player firstAttacker;
+        Player secondAttacker;
+
+        while (!isGameEnded(human.getHealth(), computer.getHealth())) {
+
+            //Default assume human won roll
+            firstAttacker = human;
+            secondAttacker = computer;
+
+            if (computerRoll >= humanRoll) {
+                //Computer won the roll
+                firstAttacker = computer;
+                secondAttacker = human;
             }
+
+            executeTurn(firstAttacker, secondAttacker);
         }
-        if (health <= 0) {
+
+        if (human.isDead()) {
             System.out.println("Computer Wins!");
         } else {
             System.out.println("User Win!");
         }
+    }
 
+    private static boolean isGameEnded(int playerHealth, int computerHealth) {
+        return playerHealth <= 0 || computerHealth <= 0;
+    }
 
+    private static void executeTurn(Player firstAttacker, Player secondAttacker) {
+        //First attacker won the roll, attacks first
+        int remainingHealth;
+        int attackDamage;
+
+        attackDamage = firstAttacker.getAttackDamage();
+        System.out.println(firstAttacker.getName() + " attacks with " + attackDamage + "!");
+
+        remainingHealth = secondAttacker.loseHealth(firstAttacker.getAttackDamage());
+        System.out.println(secondAttacker.getName() + " has " + remainingHealth + " remaining health.");
+        System.out.println("==================================");
+        pause(2);
+
+        if (!firstAttacker.isDead()) {
+            //Second player attacks human
+            attackDamage = secondAttacker.getAttackDamage();
+            System.out.println(secondAttacker.getName() + " attacks with " + attackDamage + "!");
+
+            remainingHealth = firstAttacker.loseHealth(secondAttacker.getAttackDamage());
+            System.out.println(firstAttacker.getName() + " has " + remainingHealth + " remaining health.");
+        }
+        System.out.println("==================================");
+        pause(2);
+
+    }
+
+    private static void pause(int seconds) {
+        try {
+            Thread.sleep(seconds * 1000L);
+        } catch (InterruptedException ignore ) {}
     }
 }
 
