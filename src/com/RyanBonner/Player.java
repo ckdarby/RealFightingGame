@@ -4,10 +4,12 @@ import java.util.Random;
 
 public class Player {
 
+  private String name;
   private int health;
   private int attackDamage;
-  private int attackSpeed;
-  private String name;
+  private int doubleAttackChance;
+
+  private boolean isDoubleAttack = true;
 
   public Player(String name) {
     this.name = name;
@@ -17,16 +19,16 @@ public class Player {
     return generateStat(min, max, 1);
   }
 
-  public static int generateStat(int min, int max, int weight) {
+  public static int generateStat(int min, int max, double weight) {
     Random randomGenerator = new Random();
-    return (randomGenerator.nextInt(max) + min) * weight;
+    return (int) Math.round((randomGenerator.nextInt(max) + min) * weight);
   }
 
   public String toString() {
     return getName() + "'s stats:" + "\n" +
     "Health is: " + getHealth() + "\n" +
     "Attack Damage is: " + getAttackDamage() + "\n" +
-    "Attack Speed is: " + getAttackSpeed() + "\n\n";
+    "Chance for double attack is: " + getDoubleAttackChance() + "%\n\n";
   }
 
   public int getHealth() {
@@ -37,8 +39,32 @@ public class Player {
     return attackDamage;
   }
 
-  public int getAttackSpeed() {
-    return attackSpeed;
+
+  public int getTotalAttack() {
+
+    isDoubleAttack = false;
+    int totalAttackDamage = getAttackDamage();
+
+    //Double Attack
+    totalAttackDamage += doubleAttack(getAttackDamage(), getDoubleAttackChance());
+
+    return totalAttackDamage;
+  }
+
+  private int doubleAttack(int attackDamage, int doubleAttackChance) {
+
+    if (generateStat(1, 100) <= doubleAttackChance) {
+      //Double attack happens, so return the normal amount of attack damage;
+      setDoubleAttack(true);
+      return attackDamage;
+    }
+
+    //There is no double attack, apply not a additional damage
+    return 0;
+  }
+
+  public int getDoubleAttackChance() {
+    return doubleAttackChance;
   }
 
   public String getName() {
@@ -50,7 +76,15 @@ public class Player {
   }
 
   public int loseHealth(int damage) {
-    this.setHealth(getHealth() - damage);
+
+    int remainingHealth = getHealth() - damage;
+
+    //Can't go below 0
+    if (remainingHealth < 0) {
+      remainingHealth = 0;
+    }
+
+    this.setHealth(remainingHealth);
 
     return getHealth();
   }
@@ -68,11 +102,19 @@ public class Player {
     this.attackDamage = attackDamage;
   }
 
-  public void setAttackSpeed(int attackSpeed) {
-    this.attackSpeed = attackSpeed;
+  public void setDoubleAttackChance(int doubleAttackChance) {
+    this.doubleAttackChance = doubleAttackChance;
   }
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public boolean isDoubleAttack() {
+    return isDoubleAttack;
+  }
+
+  public void setDoubleAttack(boolean isDoubleAttack) {
+    this.isDoubleAttack = isDoubleAttack;
   }
 }

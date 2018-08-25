@@ -1,33 +1,35 @@
 package com.RyanBonner;
 
 import java.util.Scanner;
-import java.util.Random;
 
 
 public class Main {
 
     public static void main(String[] args) {
 
-        System.out.println("What is your name? ");
+        Input input = Input.initalize(new Scanner(System.in));
 
-        Scanner scanner = new Scanner(System.in);
+        String humanName = input.askName();
 
-        String humanName = scanner.nextLine();
+        double computerOPWeight = getComputerSkillLevel(
+                input.askComputerSkillLevel()
+        );
 
-        System.out.println("Hi " + humanName + ", would you like to see how strong you are?");
+
+        //@todo print Hello
+        Output.println(Output.HELLO_X, humanName);
 
         Player human = new Player(humanName);
         human.setHealth(Player.generateStat(100, 1000));
         human.setAttackDamage(Player.generateStat(10, 100));
-        human.setAttackSpeed(Player.generateStat(1, 7));
-        System.out.print(human.toString());
+        human.setDoubleAttackChance(Player.generateStat(1, 100));
+        Output.println(human.toString());
 
-        int computerOPWeight = 2;
         Player computer = new Player("KappaDelta");
         computer.setHealth(Player.generateStat(100, 1000, computerOPWeight));
         computer.setAttackDamage(Player.generateStat(10, 100, computerOPWeight));
-        computer.setAttackSpeed(Player.generateStat(1, 7, computerOPWeight));
-        System.out.print(computer.toString());
+        computer.setDoubleAttackChance(Player.generateStat(1, 100, computerOPWeight));
+        Output.println(computer.toString());
 
         int humanRoll = Player.generateStat(1, 20);
         int computerRoll = Player.generateStat(1, 20);
@@ -47,13 +49,32 @@ public class Main {
                 secondAttacker = human;
             }
 
-            executeTurn(firstAttacker, secondAttacker);
+            executeBothPlayers(firstAttacker, secondAttacker);
         }
 
         if (human.isDead()) {
-            System.out.println("Computer Wins!");
+            Output.println(Output.X_HAS_WON, computer.getName());
         } else {
-            System.out.println("User Win!");
+            Output.println(Output.X_HAS_WON, human.getName());
+        }
+    }
+
+    private static double getComputerSkillLevel(String computerSkillLevel) {
+
+        if (computerSkillLevel == null) {
+            computerSkillLevel = "easy";
+        }
+
+        switch (computerSkillLevel) {
+            default:
+            case "easy":
+                return .75;
+            case "medium":
+                return 1.0;
+            case "hard":
+                return 2;
+            case "god":
+                return 3;
         }
     }
 
@@ -61,36 +82,40 @@ public class Main {
         return playerHealth <= 0 || computerHealth <= 0;
     }
 
-    private static void executeTurn(Player firstAttacker, Player secondAttacker) {
-        //First attacker won the roll, attacks first
-        int remainingHealth;
-        int attackDamage;
+    private static void executeBothPlayers(Player firstAttacker, Player secondAttacker) {
 
-        attackDamage = firstAttacker.getAttackDamage();
-        System.out.println(firstAttacker.getName() + " attacks with " + attackDamage + "!");
+        executeSinglePlayer(firstAttacker, secondAttacker);
 
-        remainingHealth = secondAttacker.loseHealth(firstAttacker.getAttackDamage());
-        System.out.println(secondAttacker.getName() + " has " + remainingHealth + " remaining health.");
-        System.out.println("==================================");
-        pause(2);
-
-        if (!firstAttacker.isDead()) {
-            //Second player attacks human
-            attackDamage = secondAttacker.getAttackDamage();
-            System.out.println(secondAttacker.getName() + " attacks with " + attackDamage + "!");
-
-            remainingHealth = firstAttacker.loseHealth(secondAttacker.getAttackDamage());
-            System.out.println(firstAttacker.getName() + " has " + remainingHealth + " remaining health.");
+        if (!secondAttacker.isDead()) {
+            executeSinglePlayer(secondAttacker, firstAttacker);
         }
-        System.out.println("==================================");
-        pause(2);
 
+    }
+
+    private static void executeSinglePlayer(Player attackerA, Player attackerB) {
+        int remainingHealth;
+        int attackerATotalDamage = attackerA.getTotalAttack();
+        String attackerAName = attackerA.getName();
+        remainingHealth = attackerB.loseHealth(attackerATotalDamage);
+
+        Output.println(Output.PLAYER_TITLE_X, attackerAName);
+
+        if (attackerA.isDoubleAttack()) {
+            Output.println(Output.X_GOT_DOUBLE_ATTACK, attackerAName);
+        }
+
+        Output.println(Output.X_ATTACKS_DAMAGE_Y, attackerAName, Integer.toString(attackerATotalDamage));
+        Output.println(Output.X_HAS_Y_HEALTH, attackerB.getName(), Integer.toString(remainingHealth));
+
+        Output.println("\n");
+        pause(2);
     }
 
     private static void pause(int seconds) {
         try {
             Thread.sleep(seconds * 1000L);
-        } catch (InterruptedException ignore ) {}
+        } catch (InterruptedException ignore) {
+        }
     }
 }
 
